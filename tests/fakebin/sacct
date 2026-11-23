@@ -1,0 +1,4 @@
+#!/bin/bash
+while [ $# -gt 0 ]; do [ "$1" = -j ] && id=$2; shift; done
+st=$(cat "$FAKE_SCHED_DIR/$id" 2>/dev/null) || exit 0
+echo "$st|0:0|00:00:01|fakenode"

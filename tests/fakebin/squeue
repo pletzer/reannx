@@ -1,0 +1,5 @@
+#!/bin/bash
+# fake squeue -h -j ID -o ...: live jobs only (PENDING/RUNNING)
+while [ $# -gt 0 ]; do [ "$1" = -j ] && id=$2; shift; done
+st=$(cat "$FAKE_SCHED_DIR/$id" 2>/dev/null)
+case "$st" in PENDING|RUNNING) echo "$st|0:01|node1";; esac

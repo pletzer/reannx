@@ -1,0 +1,10 @@
+#!/bin/bash
+# fake sbatch: run the job script in the background; state kept in $FAKE_SCHED_DIR/<id>
+script=${@: -1}
+id=$(( (RANDOM % 9000) + 1000 ))
+out=$(grep -m1 -- '--output=' "$script" | sed 's/.*--output=//')
+err=$(grep -m1 -- '--error=' "$script" | sed 's/.*--error=//')
+echo PENDING > "$FAKE_SCHED_DIR/$id"
+( sleep 0.3; echo RUNNING > "$FAKE_SCHED_DIR/$id"; bash "$script" >"$out" 2>"$err"; rc=$?
+  [ $rc -eq 0 ] && echo COMPLETED > "$FAKE_SCHED_DIR/$id" || echo FAILED > "$FAKE_SCHED_DIR/$id" ) >/dev/null 2>&1 &
+echo "$id"

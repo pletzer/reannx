@@ -1,0 +1,9 @@
+#!/bin/bash
+script=${@: -1}
+id=$(( (RANDOM % 9000) + 1000 ))
+out=$(grep -m1 -- '^#PBS -o' "$script" | sed 's/#PBS -o //')
+err=$(grep -m1 -- '^#PBS -e' "$script" | sed 's/#PBS -e //')
+echo Q > "$FAKE_SCHED_DIR/$id"
+( sleep 0.3; echo R > "$FAKE_SCHED_DIR/$id"; bash "$script" >"$out" 2>"$err"; rc=$?
+  echo "F $rc" > "$FAKE_SCHED_DIR/$id" ) >/dev/null 2>&1 &
+echo "$id.fakepbs"

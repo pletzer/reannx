@@ -1,0 +1,23 @@
+# upwindMpiCxx (fidibench) on mahuika. Replace <project> and <user> with your own
+# NeSI project code and username (and the image/executable paths) before running.
+#   reannx run --dry-run          # show the job script
+#   reannx run --follow           # submit, stream stdout, fetch results
+[job]
+name       = "upwind"
+cluster    = "mahuika"
+image      = "remote:/nesi/project/<project>/<user>/sifs/hdf5_oneapi.sif"
+command    = ["/nesi/nobackup/<project>/<user>/fidibench_apptainer/build-oneapi/upwind/cxx/upwindMpiCxx",
+              "-numCells", "128", "-numSteps", "10"]
+mpi        = true
+launcher   = "srun --mpi=pmi2"
+binds      = ["/nesi/project", "/nesi/nobackup", "/home"]
+setup_file = "mahuika_hybrid_mpi.sh"
+outputs    = ["*.vtk"]
+
+[resources]
+nodes         = 2
+ntasks        = 4
+cpus_per_task = 1
+mem           = "4G"
+walltime      = "00:05:00"
+account       = "<project>"

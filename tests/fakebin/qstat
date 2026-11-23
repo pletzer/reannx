@@ -1,0 +1,6 @@
+#!/bin/bash
+id=${@: -1}; id=${id%%.*}
+read -r st rc < "$FAKE_SCHED_DIR/$id" || exit 35
+printf 'Job Id: %s\n    job_state = %s\n' "$id" "$st"
+[ "$st" = F ] && printf '    Exit_status = %s\n' "$rc"
+exit 0

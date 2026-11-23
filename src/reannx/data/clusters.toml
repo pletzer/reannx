@@ -1,0 +1,32 @@
+# Default cluster profiles. Override/extend in ~/.config/reannx/clusters.toml
+# (same layout; tables are merged key by key).
+
+[clusters.mahuika]
+scheduler   = "slurm"
+ssh_host    = "mahuika"                      # alias in ~/.ssh/config
+workdir     = "/nesi/nobackup/{account}/{user}/reannx"
+launcher    = "srun"                         # used when job.mpi = true
+modules     = []                             # `module load` before apptainer
+# account   = "<project>"                    # set in your user clusters.toml
+[clusters.mahuika.defaults]
+partition   = "genoa"
+extra_directives = ["--hint=nomultithread"]
+[clusters.mahuika.limits]                    # read from the live cluster 2026-11-24
+cores_per_node = 168                         # genoa; VERIFY for milan (128)
+mem_per_node_gb = 700                        # VERIFY
+max_walltime = "21-00:00:00"
+
+# DRAFT / UNVERIFIED: cascade assumed to be PBS Pro. Check queue names,
+# cores per node, project flag and the apptainer module before first use.
+[clusters.cascade]
+scheduler   = "pbs"
+ssh_host    = "cascade_hob"
+workdir     = "/scale_wlg_persistent/filesets/project/{account}/{user}/reannx"
+launcher    = "mpiexec"
+modules     = []
+# account   = "niwaXXXXX"
+[clusters.cascade.defaults]
+# queue = "..."
+[clusters.cascade.limits]
+# cores_per_node = ...
+# mem_per_node_gb = ...

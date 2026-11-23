@@ -1,0 +1,5 @@
+#!/bin/bash
+# fake apptainer: `apptainer exec [-B binds] image cmd...` just runs cmd
+[ "$1" = exec ] || { echo "fake apptainer: unsupported $*" >&2; exit 1; }
+shift; while [[ "$1" == -* ]]; do shift 2; done; shift   # drop -B x, image
+exec "$@"
