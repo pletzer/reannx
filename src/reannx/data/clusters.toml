@@ -16,17 +16,27 @@ cores_per_node = 168                         # genoa; VERIFY for milan (128)
 mem_per_node_gb = 700                        # VERIFY
 max_walltime = "21-00:00:00"
 
-# DRAFT / UNVERIFIED: cascade assumed to be PBS Pro. Check queue names,
-# cores per node, project flag and the apptainer module before first use.
+# cascade (NIWA, Hobsonville login): PBS Pro 2025.2. Probed 2026-11-24 via cascade_hob:
+# queues shortq (default, <=48h), longq (48h-336h), workq (<=24h), high_mem_*, h200q/b200q (GPU);
+# nodes 384 cores / ~740 GB; apptainer is on PATH (no `module` in non-login shells);
+# the login node can reach docker registries. Smoke test (alpine, 1 core, `-P reannz40001`,
+# shortq) accepted and completed 2026-11-24. MPI launcher still unverified.
 [clusters.cascade]
 scheduler   = "pbs"
 ssh_host    = "cascade_hob"
-workdir     = "/scale_wlg_persistent/filesets/project/{account}/{user}/reannx"
-launcher    = "mpiexec"
+workdir     = "/reannz/project/{account}/{user}/reannx"
+launcher    = "mpiexec"                      # UNVERIFIED: depends on the MPI inside the image
 modules     = []
-# account   = "niwaXXXXX"
+# account   = "<project>"                    # e.g. your /reannz/project/<project> group
 [clusters.cascade.defaults]
-# queue = "..."
+queue       = "shortq"
+account_flag = "-P"                          # verified: qsub accepted -P reannz40001
 [clusters.cascade.limits]
-# cores_per_node = ...
-# mem_per_node_gb = ...
+cores_per_node  = 384
+mem_per_node_gb = 739
+[clusters.cascade.queues.shortq]
+max_walltime = "48:00:00"
+[clusters.cascade.queues.workq]
+max_walltime = "24:00:00"
+[clusters.cascade.queues.longq]
+max_walltime = "336:00:00"

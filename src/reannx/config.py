@@ -89,6 +89,7 @@ class Cluster:
     account: str | None = None
     defaults: dict = field(default_factory=dict)
     limits: dict = field(default_factory=dict)
+    queues: dict = field(default_factory=dict)      # per partition/queue overrides of limits
     user: str | None = None            # remote login name; default: from `ssh -G <host>`
 
     def __post_init__(self):
@@ -104,9 +105,9 @@ class Cluster:
 
     def validate(self, r: Resources) -> Resources:
         """Fill derived fields and check limits; return a new Resources."""
-        L = self.limits
         r = replace(r)
         r.partition = r.partition or self.defaults.get("partition") or self.defaults.get("queue")
+        L = {**self.limits, **self.queues.get(r.partition, {})}
         r.account = r.account or self.account
         if r.ntasks < 1 or r.cpus_per_task < 1:
             raise ConfigError("ntasks and cpus_per_task must be >= 1")
@@ -136,7 +137,8 @@ def load_clusters(extra: Path | None = None) -> dict[str, Cluster]:
             out[name] = Cluster(name=name, scheduler=c["scheduler"], ssh_host=c.get("ssh_host"),
                                 workdir=c["workdir"], launcher=c.get("launcher", ""),
                                 modules=c.get("modules", []), account=c.get("account"), user=c.get("user"),
-                                defaults=c.get("defaults", {}), limits=c.get("limits", {}))
+                                defaults=c.get("defaults", {}), limits=c.get("limits", {}),
+                                queues=c.get("queues", {}))
         except KeyError as e:
             raise ConfigError(f"cluster {name!r}: missing key {e}") from None
     return out

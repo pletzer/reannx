@@ -74,3 +74,11 @@ def test_pbs_status_parsing():
     assert s.parse_status("    job_state = Q\n")[0] == State.PENDING
     assert s.parse_status("    job_state = F\n    Exit_status = 2\n")[0] == State.FAILED
     assert s.parse_status("")[0] == State.UNKNOWN
+
+
+def test_queue_limits_override():
+    c = cluster("pbs", defaults={"queue": "shortq"}, limits={"cores_per_node": 8},
+                queues={"shortq": {"max_walltime": "48:00:00"}, "longq": {"max_walltime": "336:00:00"}})
+    with pytest.raises(ConfigError, match="walltime"):
+        c.validate(Resources(walltime="72:00:00"))
+    assert c.validate(Resources(walltime="72:00:00", partition="longq")).partition == "longq"
