@@ -1,0 +1,20 @@
+# upwindMpiCxx on cascade, single node, MPI ranks launched by the Intel MPI *inside* the image.
+# Replace <project> (your /reannz/project/<project> group) first. Run from this directory with:
+#   reannx run -f cascade.toml
+# The x86_64 image and the executable were copied from mahuika; cascade cannot build images
+# (no subuid/subgid for `apptainer build`).
+[job]
+name    = "upwind"
+cluster = "cascade"
+image   = "hdf5_oneapi.sif"            # local file: uploaded once, cached by hash
+inputs  = ["upwindMpiCxx"]             # copied to the run dir; runs as ./upwindMpiCxx
+# `env -u PBS_*`: inside the container Intel's mpiexec would otherwise look for PBS_NODEFILE
+command = ["env", "-u", "PBS_ENVIRONMENT", "-u", "PBS_JOBID", "-u", "PBS_NODEFILE",
+           "mpiexec", "-n", "4", "./upwindMpiCxx", "-numCells", "128", "-numSteps", "10"]
+env     = { I_MPI_FABRICS = "shm", I_MPI_HYDRA_BOOTSTRAP = "fork" }
+
+[resources]
+ntasks   = 4
+mem      = "4G"
+walltime = "00:05:00"
+account  = "<project>"
