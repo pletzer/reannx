@@ -71,3 +71,37 @@ def test_dry_run_touches_nothing(env, capsys):
 def test_config_error(env, capsys):
     rc = main(["--clusters", "clusters.toml", "run", "-c", "nope", "--image", "x", "--", "p"])
     assert rc == 2 and "unknown cluster" in capsys.readouterr().err
+
+
+def test_no_container_mode(env, capsys):
+    rc = main(["--clusters", "clusters.toml", "run", "-c", "fakeslurm", "--no-container", "--poll", "0.2",
+               "--out", "res", "--", "bash", "-c", "echo native-$((1+2))"])
+    assert rc == 0
+    run = state.load(None)
+    assert "native-3" in (Path(run["out_dir"]) / "stdout.log").read_text()
+    assert "apptainer" not in (Path(run["out_dir"]) / "job.sh").read_text()
+    assert not (env / "remote_slurm" / "images").exists() or not list((env / "remote_slurm" / "images").iterdir())
+
+
+def test_direct_mode(env, capsys):
+    rc = main(["--clusters", "clusters.toml", "run", "-c", "fakeslurm", "--direct", "--no-container", "-t", "00:01:00",
+               "--out", "res", "--", "bash", "-c", "echo direct-$((2*3)); echo err >&2"])
+    assert rc == 0
+    run = state.load(None)
+    assert run["scheduler"] == "direct" and run["state"] == "COMPLETED"
+    out = Path(run["out_dir"])
+    assert "direct-6" in (out / "stdout.log").read_text() and "err" in (out / "stderr.log").read_text()
+    assert "#SBATCH" not in (out / "job.sh").read_text() and "timeout 60 " in (out / "job.sh").read_text()
+    assert list((env / "sched").iterdir()) == []          # nothing went through the scheduler
+
+
+def test_direct_failure(env):
+    assert main(["--clusters", "clusters.toml", "run", "-c", "fakeslurm", "--direct", "--no-container",
+                 "--out", "res", "--", "bash", "-c", "exit 4"]) == 1
+    assert state.load(None)["state"] == "FAILED"
+
+
+def test_quoted_command_line_is_split(env):
+    assert main(["--clusters", "clusters.toml", "run", "-c", "fakeslurm", "--direct", "--no-container",
+                 "--out", "res", "--", "bash -c 'echo quoted-$((1+1))'"]) == 0
+    assert "quoted-2" in (Path(state.load(None)["out_dir"]) / "stdout.log").read_text()

@@ -1,8 +1,9 @@
 from .base import Scheduler, State
+from .direct import Direct
 from .pbs import PBS
 from .slurm import Slurm
 
-SCHEDULERS = {"slurm": Slurm, "pbs": PBS}
+SCHEDULERS = {"slurm": Slurm, "pbs": PBS, "direct": Direct}
 
 
 def get_scheduler(name: str) -> Scheduler:

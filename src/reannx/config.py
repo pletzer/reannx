@@ -4,6 +4,7 @@ from __future__ import annotations
 import getpass
 import math
 import re
+import shlex
 import subprocess
 import tomllib
 from dataclasses import dataclass, field, replace
@@ -150,6 +151,8 @@ class JobSpec:
     name: str = "reannx"
     cluster: str | None = None
     image: str | None = None
+    direct: bool = False             # run on the login node over ssh, no batch job
+    container: bool = True           # false: run the command directly on the compute node
     command: list[str] = field(default_factory=list)
     inputs: list[str] = field(default_factory=list)
     outputs: list[str] = field(default_factory=list)
@@ -162,8 +165,8 @@ class JobSpec:
     base_dir: Path = field(default_factory=Path.cwd)   # inputs are relative to this
 
     def check(self):
-        if not self.image:
-            raise ConfigError("no container image (job.image / --image)")
+        if self.container and not self.image:
+            raise ConfigError("no container image (job.image / --image); or set container = false / --no-container")
         if not self.command:
             raise ConfigError("no command (job.command / after `--`)")
         if not self.cluster:
@@ -184,7 +187,7 @@ def load_spec(path: Path | None) -> JobSpec:
         return JobSpec()
     d = tomllib.loads(Path(path).read_text())
     j, r = d.get("job", {}), d.get("resources", {})
-    unknown = set(j) - {"name", "cluster", "image", "command", "inputs", "outputs", "mpi", "env", "binds",
+    unknown = set(j) - {"name", "cluster", "image", "container", "direct", "command", "inputs", "outputs", "mpi", "env", "binds",
                       "launcher", "setup", "setup_file"}
     if unknown:
         raise ConfigError(f"{path}: unknown [job] keys {sorted(unknown)}")
@@ -194,8 +197,8 @@ def load_spec(path: Path | None) -> JobSpec:
         raise ConfigError(f"{path}: bad [resources]: {e}") from None
     cmd = j.get("command", [])
     return JobSpec(name=j.get("name", Path(path).resolve().parent.name or "reannx"),
-                   cluster=j.get("cluster"), image=j.get("image"),
-                   command=cmd.split() if isinstance(cmd, str) else list(cmd),
+                   cluster=j.get("cluster"), image=j.get("image"), container=j.get("container", True), direct=j.get("direct", False),
+                   command=shlex.split(cmd) if isinstance(cmd, str) else list(cmd),
                    inputs=j.get("inputs", []), outputs=j.get("outputs", []),
                    mpi=j.get("mpi", False), launcher=j.get("launcher"),
                    setup=_setup(j, Path(path).resolve().parent), env=j.get("env", {}), binds=j.get("binds", []),

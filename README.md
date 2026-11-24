@@ -24,6 +24,8 @@ reannx run -c mahuika -A <project> --image remote:/path/x.sif -N 2 -n 4 --mem 4G
   Resources are scheduler-neutral and mapped to `#SBATCH` or `#PBS -l select=…`.
 * Cluster profiles: `src/reannx/data/clusters.toml`; override in `~/.config/reannx/clusters.toml`.
   The **cascade profile is an unverified draft**.
+* `container = false` / `--no-container` runs the command without apptainer; `direct = true` / `--direct`
+  runs it on the login node over ssh with no batch job (`--time` becomes a `timeout`). See `examples/ineffjob/`.
 * Images: local `.sif` (uploaded, cached by hash), `docker://…` (pulled on the cluster),
   or `remote:/path.sif`. Images must be linux/amd64.
 * Hybrid-MPI plumbing (host PMI/UCX binds) lives in a `setup_file` shell snippet that may append to `$REANNX_BINDS`.

@@ -1,0 +1,15 @@
+# Run a plain Python script directly on the mahuika login node over ssh: no batch job, no
+# container (the script calls `sacct`, so it needs the cluster's Slurm client).
+# `direct = true` skips SLURM; `walltime` becomes a `timeout` safety limit. Keep it to light work.
+# Script: ineffjob.py (reports jobs that over-request cpu/memory/time), already on the cluster.
+# Replace <project> and <user>, then:   reannx run -f mahuika.toml
+[job]
+name      = "ineffjob"
+cluster   = "mahuika"
+direct    = true
+container = false
+command   = ["python3", "/home/<user>/ineffjob/ineffjob.py", "-S", "now-7days", "--min-elapsed", "10"]
+
+[resources]
+walltime = "00:02:00"       # timeout for the script
+account  = "<project>"      # only used to locate the run directory

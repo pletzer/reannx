@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import sys
 from pathlib import Path
 
@@ -16,6 +17,8 @@ def _add_job_args(p: argparse.ArgumentParser):
     p.add_argument("-c", "--cluster")
     p.add_argument("--image")
     p.add_argument("--name")
+    p.add_argument("--direct", action="store_true", help="run on the login node over ssh, no batch job (timeout = --time)")
+    p.add_argument("--no-container", action="store_true", help="run the command directly, not via apptainer")
     p.add_argument("--mpi", action="store_true", default=None, help="launch ranks through the cluster launcher")
     p.add_argument("--launcher", help='override launcher, e.g. "srun --mpi=pmi2"')
     p.add_argument("-N", "--nodes", type=int)
@@ -42,6 +45,10 @@ def build_spec(a) -> JobSpec:
     for k in ("cluster", "image", "name", "launcher"):
         if getattr(a, k):
             setattr(s, k, getattr(a, k))
+    if a.direct:
+        s.direct = True
+    if a.no_container:
+        s.container = False
     if a.mpi:
         s.mpi = True
     for k in ("nodes", "ntasks", "cpus_per_task", "mem", "walltime", "gpus", "partition", "account"):
@@ -52,7 +59,8 @@ def build_spec(a) -> JobSpec:
     s.binds += a.bind
     s.env.update(dict(e.split("=", 1) for e in a.env))
     if a.command:
-        s.command = a.command
+        # a single quoted argument holding a whole command line ("python x.py -a 1") is split
+        s.command = shlex.split(a.command[0]) if len(a.command) == 1 and " " in a.command[0].strip() else a.command
     if a.file is None and not a.name:
         s.name = "reannx"
     return s
