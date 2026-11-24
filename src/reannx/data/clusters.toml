@@ -7,6 +7,7 @@ ssh_host    = "mahuika"                      # alias in ~/.ssh/config
 workdir     = "/nesi/nobackup/{account}/{user}/reannx"
 launcher    = "srun"                         # used when job.mpi = true
 modules     = []                             # `module load` before apptainer
+binds       = ["/nesi/project", "/nesi/nobackup"]   # always visible inside the container
 # account   = "<project>"                    # set in your user clusters.toml
 [clusters.mahuika.defaults]
 partition   = "genoa"
@@ -19,7 +20,7 @@ max_walltime = "21-00:00:00"
 # cascade (NIWA, Hobsonville login): PBS Pro 2025.2. Probed 2026-11-24 via cascade_hob:
 # queues shortq (default, <=48h), longq (48h-336h), workq (<=24h), high_mem_*, h200q/b200q (GPU);
 # nodes 384 cores / ~740 GB; apptainer is on PATH (no `module` in non-login shells);
-# the login node can reach docker registries. Smoke test (alpine, 1 core, `-P reannz40001`,
+# the login node can reach docker registries. Smoke test (alpine, 1 core, `-P <project>`,
 # shortq) accepted and completed 2026-11-24. MPI launcher still unverified.
 [clusters.cascade]
 scheduler   = "pbs"
@@ -30,7 +31,7 @@ modules     = []
 # account   = "<project>"                    # e.g. your /reannz/project/<project> group
 [clusters.cascade.defaults]
 queue       = "shortq"
-account_flag = "-P"                          # verified: qsub accepted -P reannz40001
+account_flag = "-P"                          # verified: qsub accepted -P <project>
 [clusters.cascade.limits]
 cores_per_node  = 384
 mem_per_node_gb = 739

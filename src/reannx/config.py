@@ -85,6 +85,7 @@ class Cluster:
     ssh_host: str | None
     workdir: str
     launcher: str = ""
+    binds: list[str] = field(default_factory=list)   # default container bind mounts
     modules: list[str] = field(default_factory=list)
     account: str | None = None
     defaults: dict = field(default_factory=dict)
@@ -135,7 +136,7 @@ def load_clusters(extra: Path | None = None) -> dict[str, Cluster]:
     for name, c in data.get("clusters", {}).items():
         try:
             out[name] = Cluster(name=name, scheduler=c["scheduler"], ssh_host=c.get("ssh_host"),
-                                workdir=c["workdir"], launcher=c.get("launcher", ""),
+                                workdir=c["workdir"], launcher=c.get("launcher", ""), binds=c.get("binds", []),
                                 modules=c.get("modules", []), account=c.get("account"), user=c.get("user"),
                                 defaults=c.get("defaults", {}), limits=c.get("limits", {}),
                                 queues=c.get("queues", {}))

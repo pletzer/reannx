@@ -26,7 +26,7 @@ def new_run_id() -> str:
 def render_script(spec: JobSpec, cluster: Cluster, res: Resources, run_dir: str, image: str) -> str:
     sched = get_scheduler(cluster.scheduler)
     q = shlex.quote
-    binds = [run_dir, *spec.binds]
+    binds = list(dict.fromkeys([run_dir, *cluster.binds, *spec.binds]))
     launcher = spec.launcher or (cluster.launcher if spec.mpi else "")
     exec_cmd = f'apptainer exec -B "$REANNX_BINDS" "$REANNX_IMAGE" {shlex.join(spec.command)}'
     lines = ["#!/bin/bash", *sched.directives(spec, res, cluster, run_dir), "",

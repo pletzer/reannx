@@ -1,7 +1,7 @@
 # upwindMpiCxx (fidibench) on mahuika. Replace <project> and <user> with your own
 # NeSI project code and username (and the image/executable paths) before running.
-#   reannx run --dry-run          # show the job script
-#   reannx run --follow           # submit, stream stdout, fetch results
+#   reannx run -f mahuika.toml --dry-run    # show the job script
+#   reannx run -f mahuika.toml --follow     # submit, stream stdout, fetch results
 [job]
 name       = "upwind"
 cluster    = "mahuika"

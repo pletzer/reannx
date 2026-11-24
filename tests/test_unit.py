@@ -82,3 +82,10 @@ def test_queue_limits_override():
     with pytest.raises(ConfigError, match="walltime"):
         c.validate(Resources(walltime="72:00:00"))
     assert c.validate(Resources(walltime="72:00:00", partition="longq")).partition == "longq"
+
+
+def test_cluster_default_binds_and_dedup():
+    c = cluster(binds=["/nesi/project", "/nesi/nobackup"])
+    r = c.validate(Resources())
+    s = render_script(spec(binds=["/nesi/nobackup", "/extra"]), c, r, "/w/run1", "/i.sif")
+    assert "REANNX_BINDS=/w/run1,/nesi/project,/nesi/nobackup,/extra\n" in s
